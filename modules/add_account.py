@@ -14,12 +14,12 @@ from .start import start
 
 
 def add_account(d: Union[Message, CallbackQuery]):
-    t = '<b>Tambahkan Akun DO</b>\n\n' \
-        'Masukan Api Token Digital Ocean <a href="https://cloud.digitalocean.com/account/api/tokens">Ambil Disini</a> perhatikan dalam copy paste\n\n' \
+    t = '<b>🔑 Tambahkan Akun DigitalOcean</b>\n\n' \
+        'Masukkan Token DigitalOcean <a href="https://cloud.digitalocean.com/account/api/tokens">Ambil Disini</a> perhatikan dalam copy paste\n\n' \
         'Contoh:\n' \
         '<code>token123:Komentarxxx</code>\n' \
         '<code>token345</code>\n\n' \
-        '/cancel Membatalkan'
+        '/cancel untuk membatalkan'
 
     msg = bot.send_message(
         text=t,
@@ -37,7 +37,7 @@ def add_account_next_step_handler(m: Message):
         return
 
     msg = bot.send_message(
-        text='Tambahkan akun...',
+        text='🔄 Menambahkan akun...',
         chat_id=m.from_user.id
     )
 
@@ -68,17 +68,25 @@ def add_account_next_step_handler(m: Message):
 
         except DataReadError:
             failed_accounts.append(account)
+        except Exception as e:
+            bot.edit_message_text(
+                text=f'⚠️ Kesalahan saat menambahkan akun: <code>{str(e)}</code>',
+                chat_id=m.from_user.id,
+                message_id=msg.message_id,
+                parse_mode='HTML'
+            )
+            return
 
-    t = f'<b>Umum {len(accounts)} Nomor akun</b>\n\n'
+    t = f'<b>📊 Total {len(accounts)} akun</b>\n\n'
 
     if added_accounts:
-        t += f'Ditambahkan dengan sukses {len(added_accounts)} Intivual：\n'
+        t += f'✅ Berhasil menambahkan {len(added_accounts)} akun:\n'
         for added_account in added_accounts:
             t += f'<code>{added_account}</code>\n'
         t += '\n'
 
     if failed_accounts:
-        t += f'Tambahkan gagal {len(failed_accounts)} Intivual：\n'
+        t += f'❌ Gagal menambahkan {len(failed_accounts)} akun:\n'
         for failed_account in failed_accounts:
             t += f'<code>{failed_account}</code>\n'
 

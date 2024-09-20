@@ -10,7 +10,7 @@ from utils.db import AccountsDB
 def batch_test_delete_accounts(call: CallbackQuery):
     bot.edit_message_text(
         text=f'{call.message.html_text}\n\n'
-             f'<b>Hapus Akun Kegagalan...</b>',
+             f'<b>🔄 Menghapus Akun Gagal...</b>',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'
@@ -22,13 +22,22 @@ def batch_test_delete_accounts(call: CallbackQuery):
     for account in accounts:
         try:
             digitalocean.Balance().get_object(api_token=account['token'])
-
         except DataReadError:
-            accounts_db.remove(doc_id=account.doc_id)
+            try:
+                accounts_db.remove(doc_id=account.doc_id)
+            except Exception as e:
+                bot.edit_message_text(
+                    text=f'{call.message.html_text}\n\n'
+                         f'⚠️ Kesalahan saat menghapus akun: <code>{str(e)}</code>',
+                    chat_id=call.from_user.id,
+                    message_id=call.message.message_id,
+                    parse_mode='HTML'
+                )
+                return
 
     bot.edit_message_text(
         text=f'{call.message.html_text}\n\n'
-             f'<b>Akun kegagalan yang dihapus</b>',
+             f'<b>✅ Akun gagal telah dihapus</b>',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'

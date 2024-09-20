@@ -15,32 +15,34 @@ def start(d: Message):
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
         InlineKeyboardButton(
-            text='Tambah account',
+            text='➕ Tambah akun',
             callback_data='add_account'
         ),
         InlineKeyboardButton(
-            text='List accounts',
+            text='⚙️ Kelola akun',
             callback_data='manage_accounts'
         ),
         InlineKeyboardButton(
-            text='Membuat droplets',
+            text='💧 Buat droplets',
             callback_data='create_droplet'
         ),
         InlineKeyboardButton(
-            text='Cek droplets',
+            text='🛠️ Kelola droplets',
             callback_data='manage_droplets'
         ),
     )
-    t = f'Selamat Datang <b>{bot_name}</b>\n\n' \
-        'Anda Dapat Mengelola Akun DigitalOcean, membuat VPS, Dll.\n\n' \
+    t = f'Selamat Datang <b>{bot_name}</b> 👋\n\n' \
+        'Anda dapat mengelola akun DigitalOcean, membuat instance, dll.\n\n' \
         'Perintah cepat:\n' \
-        '/start - mulai bot\n' \
-        '/add_do - tambah account\n' \
-        '/sett_do - list accounts\n' \
-        '/bath_do - batch test accounts\n' \
-        '/add_vps - membuat droplets\n' \
-        '/sett_vps - list droplets\n' \
-        ' \n'
+        '/start - Memulai bot\n' \
+        '/add_do - Tambah akun\n' \
+        '/sett_do - Kelola akun\n' \
+        '/bath_do - Uji batch akun\n' \
+        '/add_vps - Buat droplets\n' \
+        '/sett_vps - Kelola droplets\n' \
+        ' \n' \
+        '<b>Dev: @yha_bot</b> 👨‍💻\n' \
+        '<b>Support: @fightertunnell</b> 🛡️'
     bot.send_message(
         text=t,
         chat_id=d.from_user.id,

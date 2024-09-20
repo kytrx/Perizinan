@@ -18,7 +18,7 @@ from utils.password_generator import password_generator
 
 user_dict = {}
 
-t = '<b>Buat VPS</b>\n\n'
+t = '<b>🚀 Buat Instance</b>\n\n'
 
 
 def create_droplet(d: Union[Message, CallbackQuery], data: dict = None):
@@ -46,7 +46,7 @@ def select_account(d: Union[Message, CallbackQuery]):
 
     bot.send_message(
         text=f'{t}'
-             'Pilih Akun',
+             '👤 Pilih Akun',
         chat_id=d.from_user.id,
         parse_mode='HTML',
         reply_markup=markup
@@ -61,17 +61,28 @@ def select_region(call: CallbackQuery, data: dict):
         'account': account
     }
 
-    _t = t + f'Akun: <code>{account["email"]}</code>\n\n'
+    _t = t + f'👤 Akun: <code>{account["email"]}</code>\n\n'
 
     bot.edit_message_text(
         text=f'{_t}'
-             f'Dapatkan Di Negara Tersebut...',
+             f'🌍 Mengambil daftar Wilayah...',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'
     )
 
-    regions = digitalocean.Manager(token=account['token']).get_all_regions()
+    try:
+        regions = digitalocean.Manager(token=account['token']).get_all_regions()
+    except Exception as e:
+        bot.edit_message_text(
+            text=f'{_t}'
+                 '⚠️ Kesalahan saat mengambil Wilayah: '
+                 f'<code>{str(e)}</code>',
+            chat_id=call.from_user.id,
+            message_id=call.message.message_id,
+            parse_mode='HTML'
+        )
+        return
 
     markup = InlineKeyboardMarkup(row_width=2)
     buttons = []
@@ -87,7 +98,7 @@ def select_region(call: CallbackQuery, data: dict):
 
     bot.edit_message_text(
         text=f'{_t}'
-             f'Pilih area tersebut',
+             f'🌍 Pilih Wilayah',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         reply_markup=markup,
@@ -102,18 +113,29 @@ def select_size(call: CallbackQuery, data: dict):
         'region_slug': region_slug
     })
 
-    _t = t + f'Akun: <code>{user_dict[call.from_user.id]["account"]["email"]}</code>\n' \
-             f'Negara: <code>{region_slug}</code>\n\n'
+    _t = t + f'👤 Akun: <code>{user_dict[call.from_user.id]["account"]["email"]}</code>\n' \
+             f'🌍 Wilayah: <code>{region_slug}</code>\n\n'
 
     bot.edit_message_text(
         text=f'{_t}'
-             f'Dapatkan Modelnya...',
+             f'📏 Mengambil daftar Ukuran...',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'
     )
 
-    sizes = digitalocean.Manager(token=user_dict[call.from_user.id]['account']['token']).get_all_sizes()
+    try:
+        sizes = digitalocean.Manager(token=user_dict[call.from_user.id]['account']['token']).get_all_sizes()
+    except Exception as e:
+        bot.edit_message_text(
+            text=f'{_t}'
+                 '⚠️ Kesalahan saat mengambil Ukuran: '
+                 f'<code>{str(e)}</code>',
+            chat_id=call.from_user.id,
+            message_id=call.message.message_id,
+            parse_mode='HTML'
+        )
+        return
 
     markup = InlineKeyboardMarkup(row_width=2)
     buttons = []
@@ -122,20 +144,20 @@ def select_size(call: CallbackQuery, data: dict):
             buttons.append(
                 InlineKeyboardButton(
                     text=size.slug,
-                    callback_data=f'create_droplet?nf=select_image&size={size.slug}'
+                    callback_data=f'create_droplet?nf=select_os&size={size.slug}'
                 )
             )
     markup.add(*buttons)
     markup.row(
         InlineKeyboardButton(
-            text='Sebelumnya',
+            text='⬅️ Sebelumnya',
             callback_data=f'create_droplet?nf=select_region&doc_id={user_dict[call.from_user.id]["account"].doc_id}'
         )
     )
 
     bot.edit_message_text(
         text=f'{_t}'
-             f'Pilih Modelnya',
+             f'📏 Pilih Ukuran',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         reply_markup=markup,
@@ -143,84 +165,87 @@ def select_size(call: CallbackQuery, data: dict):
     )
 
 
-def select_image(d: Union[Message, CallbackQuery], data: dict):
+def select_os(d: Union[Message, CallbackQuery], data: dict):
     size_slug = data['size'][0]
 
     user_dict[d.from_user.id].update({
         'size_slug': size_slug
     })
 
-    _t = t + f'Akun: <code>{user_dict[d.from_user.id]["account"]["email"]}</code>\n' \
-             f'Negara: <code>{user_dict[d.from_user.id]["region_slug"]}</code>\n' \
-             f'Model: <code>{size_slug}</code>\n\n'
+    _t = t + f'👤 Akun: <code>{user_dict[d.from_user.id]["account"]["email"]}</code>\n' \
+             f'🌍 Wilayah: <code>{user_dict[d.from_user.id]["region_slug"]}</code>\n' \
+             f'📏 Ukuran: <code>{size_slug}</code>\n\n'
 
-    def get_image_markup():
-        images = digitalocean.Manager(token=user_dict[d.from_user.id]['account']['token']).get_distro_images()
+    def get_os_markup():
+        try:
+            images = digitalocean.Manager(token=user_dict[d.from_user.id]['account']['token']).get_distro_images()
+        except Exception as e:
+            bot.edit_message_text(
+                text=f'{_t}'
+                     '⚠️ Kesalahan saat mengambil OS: '
+                     f'<code>{str(e)}</code>',
+                chat_id=d.from_user.id,
+                message_id=d.message.message_id,
+                parse_mode='HTML'
+            )
+            return InlineKeyboardMarkup()
 
         markup = InlineKeyboardMarkup(row_width=2)
         buttons = []
-
-        # Adding specific IDs for Debian and Ubuntu versions
-        custom_images = {
-            'Debian 10 x64': '106569146',
-            'Ubuntu 20.04 x64': '112929454',
-            'Debian 11 x64': '107383423',
-            'Debian 12 x64': '107383426',
-            'Ubuntu 18.04 x64': '108383927',
-            'Ubuntu 22.04 x64': '108383930',
-            'Ubuntu 24.04 x64': '108383933'
-        }
-
-        for label, id in custom_images.items():
-            buttons.append(
-                InlineKeyboardButton(
-                    text=label,
-                    callback_data=f'create_droplet?nf=get_name&image={id}'
+        for image in images:
+            if image.distribution in ['Ubuntu', 'CentOS', 'Debian'] \
+                    and image.public \
+                    and image.status == 'available' \
+                    and user_dict[d.from_user.id]["region_slug"] in image.regions:
+                buttons.append(
+                    InlineKeyboardButton(
+                        text=f'{image.distribution} {image.name}',
+                        callback_data=f'create_droplet?nf=get_name&image={image.slug}'
+                    )
                 )
-            )
-
         markup.add(*buttons)
         markup.row(
             InlineKeyboardButton(
-                text='Sebelumnya',
+                text='⬅️ Sebelumnya',
                 callback_data=f'create_droplet?nf=select_size&region={user_dict[d.from_user.id]["region_slug"]}'
             )
         )
 
         return markup
 
-    if isinstance(d, Message):
+    if type(d) == Message:
         msg = bot.send_message(
             text=f'{_t}'
-                 f'Dapatkan Sys Os...',
+                 f'🖼️ Mengambil daftar OS...',
             chat_id=d.from_user.id,
             parse_mode='HTML'
         )
         bot.edit_message_text(
             text=f'{_t}'
-                 f'Pilih Sys Os',
+                 f'🖼️ Pilih OS',
             chat_id=d.from_user.id,
             message_id=msg.message_id,
-            reply_markup=get_image_markup(),
+            reply_markup=get_os_markup(),
             parse_mode='HTML'
         )
 
-    elif isinstance(d, CallbackQuery):
+    elif type(d) == CallbackQuery:
         bot.edit_message_text(
             text=f'{_t}'
-                 f'Dapatkan Sys Os...',
+                 f'🖼️ Mengambil daftar OS...',
             chat_id=d.from_user.id,
             message_id=d.message.message_id,
             parse_mode='HTML'
         )
         bot.edit_message_text(
             text=f'{_t}'
-                 f'Pilih Sys Os',
+                 f'🖼️ Pilih OS',
             chat_id=d.from_user.id,
             message_id=d.message.message_id,
-            reply_markup=get_image_markup(),
+            reply_markup=get_os_markup(),
             parse_mode='HTML'
         )
+
 
 def get_name(call: CallbackQuery, data: dict):
     image_slug = data['image'][0]
@@ -229,44 +254,46 @@ def get_name(call: CallbackQuery, data: dict):
         'image_slug': image_slug
     })
 
-    _t = t + f'Akun: <code>{user_dict[call.from_user.id]["account"]["email"]}</code>\n' \
-             f'Negara: <code>{user_dict[call.from_user.id]["region_slug"]}</code>\n' \
-             f'Model: <code>{user_dict[call.from_user.id]["size_slug"]}</code>\n' \
-             f'Sys Os: <code>{image_slug}</code>\n\n'
+    _t = t + f'👤 Akun: <code>{user_dict[call.from_user.id]["account"]["email"]}</code>\n' \
+             f'🌍 Wilayah: <code>{user_dict[call.from_user.id]["region_slug"]}</code>\n' \
+             f'📏 Ukuran: <code>{user_dict[call.from_user.id]["size_slug"]}</code>\n' \
+             f'🖼️ OS: <code>{image_slug}</code>\n\n'
 
     msg = bot.edit_message_text(
         text=f'{_t}'
-             'Harap balas nama contoh: AndyYuda\n\n'
-             '/back Sebelumnya',
+             '📝 Harap balas dengan Nama Instance, contoh: FighterTunnel\n\n'
+             '/back ⬅️ Sebelumnya',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'
     )
     bot.register_next_step_handler(msg, ask_create)
 
+
 def ask_create(m: Message):
     if m.text == '/back':
-        select_image(m, data={'size': [user_dict[m.from_user.id]["size_slug"]]})
+        select_os(m, data={'size': [user_dict[m.from_user.id]["size_slug"]]})
         return
 
-    _t = t + f'Negara: <code>{user_dict[m.from_user.id]["region_slug"]}</code>\n' \
-             f'Model: <code>{user_dict[m.from_user.id]["size_slug"]}</code>\n' \
-             f'Sys Os: <code>{user_dict[m.from_user.id]["image_slug"]}</code>\n' \
-             f'Nama: <code>{m.text}</code>\n\n'
+    _t = t + f'👤 Akun: <code>{user_dict[m.from_user.id]["account"]["email"]}</code>\n' \
+             f'🌍 Wilayah: <code>{user_dict[m.from_user.id]["region_slug"]}</code>\n' \
+             f'📏 Ukuran: <code>{user_dict[m.from_user.id]["size_slug"]}</code>\n' \
+             f'🖼️ OS: <code>{user_dict[m.from_user.id]["image_slug"]}</code>\n' \
+             f'📝 Nama: <code>{m.text}</code>\n\n'
     markup = InlineKeyboardMarkup(row_width=2)
     markup.add(
         InlineKeyboardButton(
-            text='Sebelumnya',
+            text='⬅️ Sebelumnya',
             callback_data=f'create_droplet?nf=get_name&image={user_dict[m.from_user.id]["image_slug"]}'
         ),
         InlineKeyboardButton(
-            text='Membatalkan',
+            text='❌ Membatalkan',
             callback_data='create_droplet?nf=cancel_create'
         ),
     )
     markup.row(
         InlineKeyboardButton(
-            text='Membuat',
+            text='✅ Buat',
             callback_data=f'create_droplet?nf=confirm_create&name={m.text}'
         )
     )
@@ -282,7 +309,7 @@ def ask_create(m: Message):
 def cancel_create(call: CallbackQuery):
     bot.edit_message_text(
         text=f'{call.message.html_text}\n\n'
-             '<b>Membatalkan</b>',
+             '<b>❌ Membatalkan</b>',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'
@@ -295,33 +322,48 @@ def confirm_create(call: CallbackQuery, data: dict):
 
     bot.edit_message_text(
         text=f'{call.message.html_text}\n\n'
-             '<b>Buat VPS...</b>',
+             '<b>🔄 Membuat Instance...</b>',
         chat_id=call.from_user.id,
         message_id=call.message.message_id,
         parse_mode='HTML'
     )
+    try:
+        droplet = digitalocean.Droplet(
+            token=user_dict[call.from_user.id]['account']['token'],
+            name=droplet_name,
+            region=user_dict[call.from_user.id]['region_slug'],
+            image=user_dict[call.from_user.id]['image_slug'],
+            size_slug=user_dict[call.from_user.id]['size_slug'],
+            user_data=set_root_password_script(password)
+        )
+        droplet.create()
 
-    droplet = digitalocean.Droplet(
-        token=user_dict[call.from_user.id]['account']['token'],
-        name=droplet_name,
-        region=user_dict[call.from_user.id]['region_slug'],
-        image=user_dict[call.from_user.id]['image_slug'],
-        size_slug=user_dict[call.from_user.id]['size_slug'],
-        user_data=set_root_password_script(password)
-    )
-    droplet.create()
+        droplet_actions = droplet.get_actions()
+        for action in droplet_actions:
+            while action.status != 'completed':
+                sleep(3)
+                action.load()
+        droplet.load()
 
-    droplet_actions = droplet.get_actions()
-    for action in droplet_actions:
-        while action.status != 'completed':
-            sleep(5)
-            action.load()
-    droplet.load()
+        # Menunggu IP address siap
+        while not droplet.ip_address:
+            sleep(3)
+            droplet.load()
+    except Exception as e:
+        bot.edit_message_text(
+            text=f'{call.message.html_text}\n\n'
+                 '⚠️ Kesalahan saat membuat Instance: '
+                 f'<code>{str(e)}</code>',
+            chat_id=call.from_user.id,
+            message_id=call.message.message_id,
+            parse_mode='HTML'
+        )
+        return
 
     markup = InlineKeyboardMarkup()
     markup.row(
         InlineKeyboardButton(
-            text='Periksa Detailnya',
+            text='🔍 Periksa Detailnya',
             callback_data=f'droplet_detail?'
                           f'doc_id={user_dict[call.from_user.id]["account"].doc_id}&'
                           f'droplet_id={droplet.id}'
@@ -330,11 +372,11 @@ def confirm_create(call: CallbackQuery, data: dict):
 
     bot.edit_message_text(
         text=f'{call.message.html_text}\n'
-             f'Username  : <code>root</code>\n'   
-             f'Kata Sandi: <code>{password}</code>\n'
-             f'IP VPS    ：<code>{droplet.ip_address}</code>\n\n'
-             '<b>Buat Server Telah Selesai</b>',
+             f'🌐 IP: <code>{droplet.ip_address}</code>\n'
+             f'🔑 Kata Sandi: <code>{password}</code>\n\n'
+             '<b>✅ Pembuatan Server Selesai</b>',
         chat_id=call.from_user.id,
+        reply_markup=markup,
         message_id=call.message.message_id,
         parse_mode='HTML'
     )
