@@ -36,6 +36,10 @@ def text_handler(m: Message):
         logger.info(m)
 
         if m.from_user.id not in bot_admins:
+            bot.send_message(
+                text='🚫 Anda tidak memiliki izin untuk menggunakan bot ini.',
+                chat_id=m.from_user.id
+            )
             return
 
         if m.text in command_dict.keys():
@@ -52,6 +56,10 @@ def callback_query_handler(call: CallbackQuery):
         logger.info(call)
 
         if call.from_user.id not in bot_admins:
+            bot.send_message(
+                text='🚫 Anda tidak memiliki izin untuk menggunakan bot ini.',
+                chat_id=call.from_user.id
+            )
             return
 
         callback_data = urlparse.urlparse(call.data)
@@ -71,7 +79,7 @@ def callback_query_handler(call: CallbackQuery):
 
 def handle_exception(d: Union[Message, CallbackQuery], e):
     bot.send_message(
-        text=f'Melakukan kesalahan\n'
+        text=f'❌ Terjadi kesalahan\n'
              f'<code>{e}</code>',
         chat_id=d.from_user.id,
         parse_mode='HTML'
